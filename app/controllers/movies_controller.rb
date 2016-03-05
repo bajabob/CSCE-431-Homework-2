@@ -11,9 +11,20 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @sort = params[:sort]
-    @checked_ratings = params[:ratings] || Hash[MoviesHelper.all_ratings.map {|k| [k, true]}]
+
+    @checked_ratings = params[:ratings] || session[:ratings] || Hash[MoviesHelper.all_ratings.map {|k| [k, true]}]
     @all_ratings = Hash[MoviesHelper.all_ratings.map {|k| [k, @checked_ratings.key?(k)]}]
+    @sort = params[:sort] || session[:sort]
+
+    # keep flash and redirect
+    if !params[:ratings] && !params[:sort]
+      redirect_to movies_path(:ratings => @checked_ratings, :sort => @sort) and return
+    end
+
+    # save session
+    session[:ratings] = @checked_ratings
+    session[:sort] = @sort
+
     @movies = Movie.where(:rating => @checked_ratings.keys).order( @sort )
 
   end
